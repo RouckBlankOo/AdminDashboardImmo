@@ -70,50 +70,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  // Testing tools for development only
-  const devTools = process.env.NODE_ENV !== "production" && (
-    <div className="mt-4 p-2 border border-gray-300 rounded bg-gray-50">
-      <p className="text-xs text-gray-500 mb-1">Development Testing Tools</p>
-      <div className="flex space-x-2">
-        <button
-          onClick={() => {
-            setEmail("admin@sayallo.com");
-            setPassword("admin123");
-          }}
-          className="text-xs bg-blue-500 text-white px-2 py-1 rounded"
-        >
-          Fill Admin Creds
-        </button>
-        <button
-          onClick={async () => {
-            try {
-              const response = await fetch(
-                "http://localhost:5000/generate-token"
-              );
-              const data = await response.json();
-              console.log("Generated token:", data.token);
-              localStorage.setItem("authToken", data.token);
-              localStorage.setItem(
-                "user",
-                JSON.stringify({ userId: "admin123", role: "admin" })
-              );
-              onLoginSuccess();
-            } catch (error) {
-              console.error("Failed to generate token:", error);
-            }
-          }}
-          className="text-xs bg-green-500 text-white px-2 py-1 rounded"
-        >
-          Get API Token
-        </button>
-      </div>
-    </div>
-  );
+  // Removed the devTools section completely
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-2xl">
-        {/* Rest of your component remains the same */}
         <div className="text-center">
           <img
             src="/assets/logoS.png"
@@ -136,7 +97,6 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
         )}
 
         <form className="mt-8 space-y-6" onSubmit={handleLogin}>
-          {/* Form fields remain the same */}
           <div className="space-y-4">
             <div>
               <label
@@ -259,8 +219,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
             </button>
           </div>
 
-          {/* Add the dev tools only in development */}
-          {devTools}
+          {/* Removed devTools reference here */}
         </form>
       </div>
     </div>

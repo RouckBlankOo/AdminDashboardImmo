@@ -36,35 +36,34 @@ const Index = () => {
     try {
       const data = await propertyService.getAllProperties();
 
-      // Map _id to id for compatibility with components
-      const mappedData = data.map((prop) => ({
+      // Process image paths and add id for compatibility
+      const processedData = data.map((prop) => ({
         ...prop,
-        id: prop._id, // Add id property based on _id
+        id: prop._id,
+        // Process image paths to add the base URL if needed
+        image: processImagePath(prop.image),
+        planImage: processImagePath(prop.planImage),
       }));
 
-      setProperties(mappedData);
+      setProperties(processedData);
     } catch (err) {
       console.error("Failed to fetch properties:", err);
       setError("Failed to load properties. Please try again later.");
-
-      // Add id to fallback data too
-      setProperties([
-        {
-          _id: "1",
-          id: "1", // Add id field
-          title: "Villa sur Hollywood Boulevard",
-          // Rest of the properties
-        },
-        {
-          _id: "2",
-          id: "2", // Add id field
-          title: "Restaurant de Cuisine Traditionnelle",
-          // Rest of the properties
-        },
-      ]);
+      // Your fallback code...
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to process image paths
+  const processImagePath = (path?: string): string | undefined => {
+    if (!path) return undefined;
+
+    // If it's already a full URL, return it as is
+    if (path.startsWith("http")) return path;
+
+    // Otherwise, prepend the API base URL
+    return `http://localhost:5000/${path.replace(/^\//, "")}`;
   };
 
   const handleLoginSuccess = () => {
@@ -108,12 +107,33 @@ const Index = () => {
 
   const handleDeleteProperty = async (id: string) => {
     try {
+      setIsLoading(true);
+
+      // Make sure we're passing the correct ID to the deleteProperty function
+      console.log(`Attempting to delete property with ID: ${id}`);
+
+      // Call the API to delete the property
       await propertyService.deleteProperty(id);
+
+      // Update the local state only after successful API call
       setProperties((prev) => prev.filter((p) => p._id !== id));
+
+      // Show success message or notification
+      console.log(`Property with ID ${id} deleted successfully`);
       return true;
     } catch (error) {
-      console.error("Error deleting property:", error);
+      // Log detailed error information
+      console.error(`Error deleting property with ID ${id}:`, error);
+
+      // Display error message to user
+      setError(
+        `Failed to delete property. ${
+          error instanceof Error ? error.message : "Please try again later."
+        }`
+      );
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -162,7 +182,7 @@ const Index = () => {
 
               <div className="flex items-center space-x-4 flex-shrink-0">
                 <span className="text-sm text-gray-600">
-                  {authService.getCurrentUser()?.userId || "Admin"}
+                  {"Bienvenue, Admin"}
                 </span>
               </div>
             </div>
