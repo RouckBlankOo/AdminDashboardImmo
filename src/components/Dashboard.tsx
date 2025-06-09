@@ -126,7 +126,7 @@ export const Dashboard = ({ properties }: DashboardProps) => {
                       {property.location}
                     </p>
                     <p className="text-sm font-medium text-red-600">
-                      {property.price}€{property.isRental ? "/mois" : ""}
+                      {property.price}DT{property.isRental ? "/mois" : ""}
                     </p>
                   </div>
                   <span

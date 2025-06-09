@@ -1,6 +1,14 @@
-
-import React, { useState } from 'react';
-import { Plus, Search, Edit, Trash2, MapPin, Bed, Bath, AreaChart } from 'lucide-react';
+import React, { useState } from "react";
+import {
+  Plus,
+  Search,
+  Edit,
+  Trash2,
+  MapPin,
+  Bed,
+  Bath,
+  AreaChart,
+} from "lucide-react";
 
 interface Property {
   id: number;
@@ -27,38 +35,48 @@ interface PropertiesPageProps {
   setEditingProperty: (property: Property | null) => void;
 }
 
-export const PropertiesPage = ({ 
-  properties, 
-  setProperties, 
-  setShowPropertyForm, 
-  setEditingProperty 
+export const PropertiesPage = ({
+  properties,
+  setProperties,
+  setShowPropertyForm,
+  setEditingProperty,
 }: PropertiesPageProps) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterType, setFilterType] = useState("all");
 
-  const propertyTypes = ['Appartement', 'Villa', 'Maison', 'Commerce', 'Terrain', 'Bureau'];
+  const propertyTypes = [
+    "Appartement",
+    "Villa",
+    "Maison",
+    "Commerce",
+    "Terrain",
+    "Bureau",
+  ];
 
   const handleEdit = (property: Property) => {
-    console.log('Editing property:', property.id);
+    console.log("Editing property:", property.id);
     setEditingProperty(property);
     setShowPropertyForm(true);
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette propriété ?')) {
-      console.log('Deleting property:', id);
-      setProperties(prev => prev.filter(prop => prop.id !== id));
+    if (
+      window.confirm("Êtes-vous sûr de vouloir supprimer cette propriété ?")
+    ) {
+      console.log("Deleting property:", id);
+      setProperties((prev) => prev.filter((prop) => prop.id !== id));
     }
   };
 
-  const filteredProperties = properties.filter(property => {
-    const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         property.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || property.type === filterType;
+  const filteredProperties = properties.filter((property) => {
+    const matchesSearch =
+      property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      property.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterType === "all" || property.type === filterType;
     return matchesSearch && matchesFilter;
   });
 
-  console.log('Filtered properties:', filteredProperties.length);
+  console.log("Filtered properties:", filteredProperties.length);
 
   return (
     <div className="p-6">
@@ -74,7 +92,7 @@ export const PropertiesPage = ({
           Ajouter Propriété
         </button>
       </div>
-      
+
       <div className="bg-white rounded-xl shadow-lg p-6 mb-6 border border-gray-100">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1 relative">
@@ -93,19 +111,24 @@ export const PropertiesPage = ({
             className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-200"
           >
             <option value="all">Tous les types</option>
-            {propertyTypes.map(type => (
-              <option key={type} value={type}>{type}</option>
+            {propertyTypes.map((type) => (
+              <option key={type} value={type}>
+                {type}
+              </option>
             ))}
           </select>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredProperties.map(property => (
-          <div key={property.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100">
+        {filteredProperties.map((property) => (
+          <div
+            key={property.id}
+            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
+          >
             <div className="relative h-48">
-              <img 
-                src={property.image} 
+              <img
+                src={property.image}
                 alt={property.title}
                 className="w-full h-full object-cover"
               />
@@ -114,22 +137,31 @@ export const PropertiesPage = ({
                   En Vedette
                 </span>
               )}
-              <span className={`absolute top-3 right-3 px-3 py-1 text-xs font-medium rounded-full shadow-lg ${
-                property.status === 'À Vendre' ? 'bg-green-500 text-white' :
-                property.status === 'À Louer' ? 'bg-blue-500 text-white' : 'bg-gray-500 text-white'
-              }`}>
+              <span
+                className={`absolute top-3 right-3 px-3 py-1 text-xs font-medium rounded-full shadow-lg ${
+                  property.status === "À Vendre"
+                    ? "bg-green-500 text-white"
+                    : property.status === "À Louer"
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-500 text-white"
+                }`}
+              >
                 {property.status}
               </span>
             </div>
-            
+
             <div className="p-6">
-              <h3 className="font-semibold text-gray-900 mb-2 text-lg">{property.title}</h3>
+              <h3 className="font-semibold text-gray-900 mb-2 text-lg">
+                {property.title}
+              </h3>
               <p className="text-sm text-gray-600 mb-2 flex items-center">
                 <MapPin className="h-4 w-4 mr-1 text-gray-400" />
                 {property.location}
               </p>
-              <p className="text-xl font-bold text-red-600 mb-4">{property.price}€{property.isRental ? '/mois' : ''}</p>
-              
+              <p className="text-xl font-bold text-red-600 mb-4">
+                {property.price}DT{property.isRental ? "/mois" : ""}
+              </p>
+
               <div className="flex items-center text-sm text-gray-600 mb-4 space-x-4">
                 {property.beds && (
                   <span className="flex items-center">
@@ -148,7 +180,7 @@ export const PropertiesPage = ({
                   {property.sqft}m²
                 </span>
               </div>
-              
+
               <div className="flex justify-between gap-3">
                 <button
                   onClick={() => handleEdit(property)}
