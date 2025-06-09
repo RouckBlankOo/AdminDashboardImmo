@@ -39,9 +39,8 @@ const Index = () => {
       // Process image paths and add id for compatibility
       const processedData = data.map((prop) => ({
         ...prop,
-        id: prop._id,
-        // Process image paths to add the base URL if needed
-        image: processImagePath(prop.image),
+        id: prop._id || "", // Ensure id is always defined
+        image: processImagePath(prop.image), // Ensure image is processed
         planImage: processImagePath(prop.planImage),
       }));
 
@@ -49,7 +48,6 @@ const Index = () => {
     } catch (err) {
       console.error("Failed to fetch properties:", err);
       setError("Failed to load properties. Please try again later.");
-      // Your fallback code...
     } finally {
       setIsLoading(false);
     }
@@ -109,13 +107,10 @@ const Index = () => {
     try {
       setIsLoading(true);
 
-      // Make sure we're passing the correct ID to the deleteProperty function
       console.log(`Attempting to delete property with ID: ${id}`);
 
-      // Call the API to delete the property
       await propertyService.deleteProperty(id);
 
-      // Update the local state only after successful API call
       setProperties((prev) => prev.filter((p) => p._id !== id));
 
       // Show success message or notification
@@ -208,7 +203,8 @@ const Index = () => {
               <Dashboard
                 properties={properties.map((prop) => ({
                   ...prop,
-                  id: prop._id,
+                  id: prop._id || "", // Ensure id is always defined
+                  image: prop.image || "", // Provide a fallback for image
                 }))}
                 isLoading={isLoading}
               />

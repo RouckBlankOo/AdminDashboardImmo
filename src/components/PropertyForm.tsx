@@ -456,18 +456,15 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                   disabled={isSubmitting}
                 />
                 {formData.image && !imageFile && (
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">Image actuelle:</p>
-                    <img
-                      src={
-                        formData.image.startsWith("http")
-                          ? formData.image
-                          : `http://localhost:5000/${formData.image}`
-                      }
-                      alt="Property"
-                      className="h-20 w-20 object-cover mt-1 rounded border"
-                    />
-                  </div>
+                  <img
+                    src={
+                      formData.image.startsWith("http")
+                        ? formData.image
+                        : `http://localhost:5000/${formData.image}`
+                    }
+                    alt="Property"
+                    className="h-20 w-20 object-cover mt-1 rounded border"
+                  />
                 )}
               </div>
 

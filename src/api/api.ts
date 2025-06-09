@@ -23,7 +23,8 @@ apiClient.interceptors.request.use((config) => {
 
 // Define types
 export interface Property {
-  id?: number;
+  _id?: string;
+  id?: string; // Ensure id is included
   title: string;
   location: string;
   price: string;
@@ -32,12 +33,15 @@ export interface Property {
   beds?: number;
   baths?: number;
   sqft: number;
-  image: string;
+  image?: string; // Already optional
+  planImage?: string;
   dateAdded?: string;
   featured: boolean;
   description: string;
   tags: string[];
   isRental?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AgencyInfo {
