@@ -5,8 +5,8 @@ import authService from "./authService";
 const API_URL = "http://localhost:5000/api";
 
 export interface Property {
-  _id?: string;
-  id?: string;
+  _id?: string; // MongoDB ID
+  id?: string; // Frontend ID derived from _id
   title: string;
   location: string;
   price: string;
@@ -22,8 +22,6 @@ export interface Property {
   description: string;
   tags: string[];
   isRental?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 // Create a configured axios instance for API requests

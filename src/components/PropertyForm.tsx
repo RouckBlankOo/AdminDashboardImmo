@@ -1,4 +1,3 @@
-// PropertyForm.tsx - Updated with proper backend integration
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
@@ -16,8 +15,8 @@ interface Property {
   tags: string[];
   featured: boolean;
   isRental?: boolean;
-  image?: string;
-  planImage?: string;
+  images?: string[]; // Changed to array
+  planImages?: string[]; // Changed to array
 }
 
 interface PropertyFormProps {
@@ -54,10 +53,12 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     tags: [],
     featured: false,
     isRental: false,
+    images: [],
+    planImages: [],
   });
 
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [planFile, setPlanFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [planFiles, setPlanFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentTag, setCurrentTag] = useState("");
@@ -73,16 +74,19 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
 
   const statusOptions = ["À Vendre", "À Louer", "Vendu", "Loué"];
 
-  // Set form data when editing property
   useEffect(() => {
     if (editingProperty) {
       setFormData({
         ...editingProperty,
         beds: editingProperty.beds || undefined,
         baths: editingProperty.baths || undefined,
+        tags: editingProperty.tags || [],
+        images: editingProperty.images || [],
+        planImages: editingProperty.planImages || [],
       });
+      setImageFiles([]);
+      setPlanFiles([]);
     } else {
-      // Reset form when not editing
       setFormData({
         title: "",
         location: "",
@@ -96,9 +100,11 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         tags: [],
         featured: false,
         isRental: false,
+        images: [],
+        planImages: [],
       });
-      setImageFile(null);
-      setPlanFile(null);
+      setImageFiles([]);
+      setPlanFiles([]);
     }
   }, [editingProperty]);
 
@@ -116,21 +122,18 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         [name]: checked,
       }));
     } else if (name === "price") {
-      // Allow only numbers in price field
       const numericValue = value.replace(/[^0-9]/g, "");
       setFormData((prev) => ({
         ...prev,
         [name]: numericValue,
       }));
     } else if (name === "beds" || name === "baths") {
-      // Convert numeric fields to numbers, allow empty values
       const numValue = value === "" ? undefined : parseInt(value);
       setFormData((prev) => ({
         ...prev,
         [name]: numValue,
       }));
     } else if (name === "sqft") {
-      // Convert sqft to number, default to 0 if empty
       const numValue = value === "" ? 0 : parseInt(value);
       setFormData((prev) => ({
         ...prev,
@@ -145,15 +148,37 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setImageFile(e.target.files[0]);
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      if (filesArray.length + imageFiles.length > 10) {
+        setError(
+          "Vous pouvez télécharger jusqu'à 10 images maximum pour l'image principale."
+        );
+        return;
+      }
+      setImageFiles((prev) => [...prev, ...filesArray]);
     }
   };
 
   const handlePlanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setPlanFile(e.target.files[0]);
+    if (e.target.files) {
+      const filesArray = Array.from(e.target.files);
+      if (filesArray.length + planFiles.length > 5) {
+        setError(
+          "Vous pouvez télécharger jusqu'à 5 images maximum pour le plan."
+        );
+        return;
+      }
+      setPlanFiles((prev) => [...prev, ...filesArray]);
     }
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removePlanImage = (index: number) => {
+    setPlanFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const addTag = () => {
@@ -179,7 +204,6 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     setIsSubmitting(true);
 
     try {
-      // Validate required fields
       if (!formData.title.trim()) {
         throw new Error("Le titre est obligatoire");
       }
@@ -193,10 +217,8 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         throw new Error("La superficie doit être supérieure à 0");
       }
 
-      // Create FormData object for API submission
       const propertyFormData = new FormData();
 
-      // Add all form fields to FormData
       propertyFormData.append("title", formData.title.trim());
       propertyFormData.append("location", formData.location.trim());
       propertyFormData.append("price", formData.price);
@@ -207,7 +229,6 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
       propertyFormData.append("featured", formData.featured.toString());
       propertyFormData.append("isRental", formData.isRental.toString());
 
-      // Add beds and baths only if they have values
       if (formData.beds !== undefined) {
         propertyFormData.append("beds", formData.beds.toString());
       }
@@ -215,31 +236,27 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         propertyFormData.append("baths", formData.baths.toString());
       }
 
-      // Add tags individually (backend expects multiple entries)
       formData.tags.forEach((tag) => {
         propertyFormData.append("tags", tag);
       });
 
-      // Add files if present
-      if (imageFile) {
-        propertyFormData.append("image", imageFile);
-      }
-      if (planFile) {
-        propertyFormData.append("planImage", planFile);
-      }
+      imageFiles.forEach((file) => {
+        propertyFormData.append("images", file);
+      });
+
+      planFiles.forEach((file) => {
+        propertyFormData.append("planImages", file);
+      });
 
       let success = false;
 
       if (editingProperty && editingProperty._id) {
-        // Update existing property
         success = await onUpdateProperty(editingProperty._id, propertyFormData);
       } else {
-        // Create new property
         success = await onCreateProperty(propertyFormData);
       }
 
       if (success) {
-        // Reset form and close modal
         setFormData({
           title: "",
           location: "",
@@ -253,9 +270,11 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
           tags: [],
           featured: false,
           isRental: false,
+          images: [],
+          planImages: [],
         });
-        setImageFile(null);
-        setPlanFile(null);
+        setImageFiles([]);
+        setPlanFiles([]);
         setCurrentTag("");
         setShowPropertyForm(false);
         setEditingProperty(null);
@@ -274,6 +293,8 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     setEditingProperty(null);
     setError(null);
     setCurrentTag("");
+    setImageFiles([]);
+    setPlanFiles([]);
   };
 
   if (!showPropertyForm) return null;
@@ -446,53 +467,102 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Image principale
+                  Image principale (max 10)
                 </label>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageChange}
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   disabled={isSubmitting}
                 />
-                {formData.image && !imageFile && (
-                  <img
-                    src={
-                      formData.image.startsWith("http")
-                        ? formData.image
-                        : `http://localhost:5000/${formData.image}`
-                    }
-                    alt="Property"
-                    className="h-20 w-20 object-cover mt-1 rounded border"
-                  />
-                )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {imageFiles.map((file, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt="Preview"
+                        className="h-20 w-20 object-cover rounded border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(index)}
+                        className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
+                        disabled={isSubmitting}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {editingProperty?.images &&
+                    editingProperty.images.length > 0 &&
+                    imageFiles.length === 0 && (
+                      <div className="relative">
+                        <img
+                          src={`http://localhost:5000/${editingProperty.images[0].replace(
+                            /^\.\//,
+                            ""
+                          )}`}
+                          alt="Existing Property"
+                          className="h-20 w-20 object-cover rounded border"
+                          onError={(e) =>
+                            (e.currentTarget.src = "/placeholder-image.jpg")
+                          }
+                        />
+                      </div>
+                    )}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Plan / Image secondaire
+                  Plan / Image secondaire (max 5)
                 </label>
                 <input
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handlePlanChange}
                   className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   disabled={isSubmitting}
                 />
-                {formData.planImage && !planFile && (
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">Plan actuel:</p>
-                    <img
-                      src={
-                        formData.planImage.startsWith("http")
-                          ? formData.planImage
-                          : `http://localhost:5000/${formData.planImage}`
-                      }
-                      alt="Property Plan"
-                      className="h-20 w-20 object-cover mt-1 rounded border"
-                    />
-                  </div>
-                )}
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {planFiles.map((file, index) => (
+                    <div key={index} className="relative">
+                      <img
+                        src={URL.createObjectURL(file)}
+                        alt="Preview"
+                        className="h-20 w-20 object-cover rounded border"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePlanImage(index)}
+                        className="absolute top-0 right-0 bg-red-600 text-white rounded-full p-1"
+                        disabled={isSubmitting}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {editingProperty?.planImages &&
+                    editingProperty.planImages.length > 0 &&
+                    planFiles.length === 0 && (
+                      <div className="relative">
+                        <img
+                          src={`http://localhost:5000/${editingProperty.planImages[0].replace(
+                            /^\.\//,
+                            ""
+                          )}`}
+                          alt="Existing Plan"
+                          className="h-20 w-20 object-cover rounded border"
+                          onError={(e) =>
+                            (e.currentTarget.src = "/placeholder-image.jpg")
+                          }
+                        />
+                      </div>
+                    )}
+                </div>
               </div>
             </div>
 

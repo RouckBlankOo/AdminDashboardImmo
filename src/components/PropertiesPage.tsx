@@ -59,7 +59,7 @@ export const PropertiesPage = ({
     setShowPropertyForm(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
     if (
       window.confirm("Êtes-vous sûr de vouloir supprimer cette propriété ?")
     ) {

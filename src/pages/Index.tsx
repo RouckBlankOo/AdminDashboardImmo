@@ -39,8 +39,8 @@ const Index = () => {
       // Process image paths and add id for compatibility
       const processedData = data.map((prop) => ({
         ...prop,
-        id: prop._id || "", // Ensure id is always defined
-        image: processImagePath(prop.image), // Ensure image is processed
+        id: prop._id || "", // Ensure id is always a string, derived from _id
+        image: processImagePath(prop.image) || "", // Provide a fallback for image
         planImage: processImagePath(prop.planImage),
       }));
 
@@ -76,7 +76,14 @@ const Index = () => {
   const handleCreateProperty = async (propertyData: FormData) => {
     try {
       const newProperty = await propertyService.createProperty(propertyData);
-      setProperties((prev) => [...prev, newProperty]);
+      // Ensure the new property has an id field
+      const processedProperty = {
+        ...newProperty,
+        id: newProperty._id || "",
+        image: processImagePath(newProperty.image) || "",
+        planImage: processImagePath(newProperty.planImage),
+      };
+      setProperties((prev) => [...prev, processedProperty]);
       setShowPropertyForm(false);
       return true;
     } catch (error) {
@@ -91,8 +98,15 @@ const Index = () => {
         id,
         propertyData
       );
+      // Ensure the updated property has an id field
+      const processedProperty = {
+        ...updatedProperty,
+        id: updatedProperty._id || "",
+        image: processImagePath(updatedProperty.image) || "",
+        planImage: processImagePath(updatedProperty.planImage),
+      };
       setProperties((prev) =>
-        prev.map((p) => (p._id === id ? updatedProperty : p))
+        prev.map((p) => (p._id === id ? processedProperty : p))
       );
       setShowPropertyForm(false);
       setEditingProperty(null);
@@ -109,18 +123,18 @@ const Index = () => {
 
       console.log(`Attempting to delete property with ID: ${id}`);
 
+      // Call the API to delete the property
       await propertyService.deleteProperty(id);
 
+      // Update the local state to remove the deleted property
       setProperties((prev) => prev.filter((p) => p._id !== id));
 
-      // Show success message or notification
       console.log(`Property with ID ${id} deleted successfully`);
       return true;
     } catch (error) {
-      // Log detailed error information
       console.error(`Error deleting property with ID ${id}:`, error);
 
-      // Display error message to user
+      // Display error message to the user
       setError(
         `Failed to delete property. ${
           error instanceof Error ? error.message : "Please try again later."
@@ -203,7 +217,7 @@ const Index = () => {
               <Dashboard
                 properties={properties.map((prop) => ({
                   ...prop,
-                  id: prop._id || "", // Ensure id is always defined
+                  id: prop._id || "", // Ensure id is always a string
                   image: prop.image || "", // Provide a fallback for image
                 }))}
                 isLoading={isLoading}
@@ -212,7 +226,11 @@ const Index = () => {
 
             {currentPage === "properties" && (
               <PropertiesPage
-                properties={properties}
+                properties={properties.map((prop) => ({
+                  ...prop,
+                  id: prop._id || "", // Ensure id is always a string
+                  image: prop.image || "", // Provide a fallback for image
+                }))}
                 setProperties={setProperties}
                 setShowPropertyForm={setShowPropertyForm}
                 setEditingProperty={setEditingProperty}
