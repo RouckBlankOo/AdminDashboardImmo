@@ -15,8 +15,8 @@ interface Property {
   tags: string[];
   featured: boolean;
   isRental?: boolean;
-  images?: string[]; // Changed to array
-  planImages?: string[]; // Changed to array
+  image?: string;
+  planImage?: string;
 }
 
 interface PropertyFormProps {
@@ -53,12 +53,10 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     tags: [],
     featured: false,
     isRental: false,
-    images: [],
-    planImages: [],
   });
 
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
-  const [planFiles, setPlanFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]); // For "Image principale"
+  const [planFiles, setPlanFiles] = useState<File[]>([]); // For "Plan / Image secondaire"
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentTag, setCurrentTag] = useState("");
@@ -81,10 +79,8 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         beds: editingProperty.beds || undefined,
         baths: editingProperty.baths || undefined,
         tags: editingProperty.tags || [],
-        images: editingProperty.images || [],
-        planImages: editingProperty.planImages || [],
       });
-      setImageFiles([]);
+      setImageFiles([]); // Reset new uploads for editing
       setPlanFiles([]);
     } else {
       setFormData({
@@ -100,8 +96,6 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         tags: [],
         featured: false,
         isRental: false,
-        images: [],
-        planImages: [],
       });
       setImageFiles([]);
       setPlanFiles([]);
@@ -270,8 +264,6 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
           tags: [],
           featured: false,
           isRental: false,
-          images: [],
-          planImages: [],
         });
         setImageFiles([]);
         setPlanFiles([]);
@@ -495,23 +487,19 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                       </button>
                     </div>
                   ))}
-                  {editingProperty?.images &&
-                    editingProperty.images.length > 0 &&
-                    imageFiles.length === 0 && (
-                      <div className="relative">
-                        <img
-                          src={`http://localhost:5000/${editingProperty.images[0].replace(
-                            /^\.\//,
-                            ""
-                          )}`}
-                          alt="Existing Property"
-                          className="h-20 w-20 object-cover rounded border"
-                          onError={(e) =>
-                            (e.currentTarget.src = "/placeholder-image.jpg")
-                          }
-                        />
-                      </div>
-                    )}
+                  {editingProperty?.image && imageFiles.length === 0 && (
+                    <div className="relative">
+                      <img
+                        src={
+                          editingProperty.image.startsWith("http")
+                            ? editingProperty.image
+                            : `http://localhost:5000/${editingProperty.image}`
+                        }
+                        alt="Existing Property"
+                        className="h-20 w-20 object-cover rounded border"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -545,23 +533,19 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                       </button>
                     </div>
                   ))}
-                  {editingProperty?.planImages &&
-                    editingProperty.planImages.length > 0 &&
-                    planFiles.length === 0 && (
-                      <div className="relative">
-                        <img
-                          src={`http://localhost:5000/${editingProperty.planImages[0].replace(
-                            /^\.\//,
-                            ""
-                          )}`}
-                          alt="Existing Plan"
-                          className="h-20 w-20 object-cover rounded border"
-                          onError={(e) =>
-                            (e.currentTarget.src = "/placeholder-image.jpg")
-                          }
-                        />
-                      </div>
-                    )}
+                  {editingProperty?.planImage && planFiles.length === 0 && (
+                    <div className="relative">
+                      <img
+                        src={
+                          editingProperty.planImage.startsWith("http")
+                            ? editingProperty.planImage
+                            : `http://localhost:5000/${editingProperty.planImage}`
+                        }
+                        alt="Existing Plan"
+                        className="h-20 w-20 object-cover rounded border"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -9,30 +9,15 @@ import {
   Bath,
   AreaChart,
 } from "lucide-react";
-
-interface Property {
-  id: number;
-  title: string;
-  location: string;
-  price: string;
-  type: string;
-  status: string;
-  beds?: number;
-  baths?: number;
-  sqft: number;
-  image: string;
-  dateAdded: string;
-  featured: boolean;
-  description: string;
-  tags: string[];
-  isRental: boolean;
-}
+import { Property } from "../api/propertyService"; // Import Property interface from propertyService
 
 interface PropertiesPageProps {
   properties: Property[];
   setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
   setShowPropertyForm: (show: boolean) => void;
   setEditingProperty: (property: Property | null) => void;
+  onDeleteProperty: (id: string) => Promise<boolean>; // Add onDeleteProperty prop
+  isLoading: boolean;
 }
 
 export const PropertiesPage = ({
@@ -40,6 +25,8 @@ export const PropertiesPage = ({
   setProperties,
   setShowPropertyForm,
   setEditingProperty,
+  onDeleteProperty,
+  isLoading,
 }: PropertiesPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -59,12 +46,12 @@ export const PropertiesPage = ({
     setShowPropertyForm(true);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     if (
       window.confirm("Êtes-vous sûr de vouloir supprimer cette propriété ?")
     ) {
       console.log("Deleting property:", id);
-      setProperties((prev) => prev.filter((prop) => prop.id !== id));
+      await onDeleteProperty(id);
     }
   };
 
@@ -120,10 +107,14 @@ export const PropertiesPage = ({
         </div>
       </div>
 
+      {isLoading && (
+        <div className="text-center text-gray-500">Chargement...</div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProperties.map((property) => (
           <div
-            key={property.id}
+            key={property.id} // Use string id derived from _id
             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
           >
             <div className="relative h-48">
