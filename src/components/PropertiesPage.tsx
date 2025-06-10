@@ -134,6 +134,8 @@ export const PropertiesPage = ({
                     ? "bg-green-500 text-white"
                     : property.status === "À Louer"
                     ? "bg-blue-500 text-white"
+                    : property.status === "En Cours"
+                    ? "bg-purple-500 text-white"
                     : "bg-gray-500 text-white"
                 }`}
               >

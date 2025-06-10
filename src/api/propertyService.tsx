@@ -6,7 +6,7 @@ const API_URL = "http://localhost:5000/api";
 
 export interface Property {
   _id?: string; // MongoDB ID
-  id?: string; // Frontend ID derived from _id
+  id: string; // Frontend ID derived from _id
   title: string;
   location: string;
   price: string;
@@ -15,15 +15,16 @@ export interface Property {
   beds?: number;
   baths?: number;
   sqft: number;
-  image?: string;
-  planImage?: string;
-  dateAdded?: string;
+  image?: string; // Processed single image
+  planImage?: string; // Processed single plan image
+  images?: string[]; // Array from backend
+  planImages?: string[]; // Array from backend
+  dateAdded?: string; // Optional
   featured: boolean;
   description: string;
   tags: string[];
   isRental?: boolean;
 }
-
 // Create a configured axios instance for API requests
 const apiClient = axios.create({
   baseURL: API_URL,

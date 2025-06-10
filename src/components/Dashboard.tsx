@@ -1,5 +1,5 @@
 import React from "react";
-import { Building, DollarSign, Home, Eye } from "lucide-react";
+import { Building, DollarSign, Home, Eye, Hammer } from "lucide-react";
 
 interface Property {
   id: string;
@@ -17,6 +17,7 @@ interface Property {
   description: string;
   tags: string[];
   isRental: boolean;
+  planImage?: string; // Plan image for properties under construction
 }
 
 interface DashboardProps {
@@ -29,6 +30,7 @@ export const Dashboard = ({ properties }: DashboardProps) => {
     forSale: properties.filter((p) => p.status === "À Vendre").length,
     forRent: properties.filter((p) => p.status === "À Louer").length,
     featured: properties.filter((p) => p.featured).length,
+    underConstruction: properties.filter((p) => p.status === "En Cours").length, // New stat for properties under construction
   };
 
   console.log("Dashboard stats:", stats);
@@ -40,7 +42,7 @@ export const Dashboard = ({ properties }: DashboardProps) => {
           Tableau de Bord
         </h1>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-6 lg:mb-8">
           <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6 hover:shadow-xl transition-all duration-300 border border-gray-100">
             <div className="flex items-center">
               <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg">
@@ -98,6 +100,20 @@ export const Dashboard = ({ properties }: DashboardProps) => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white rounded-xl shadow-lg p-4 lg:p-6 hover:shadow-xl transition-all duration-300 border border-gray-100">
+            <div className="flex items-center">
+              <div className="bg-gradient-to-r from-purple-500 to-purple-600 p-3 rounded-xl shadow-lg">
+                <Hammer className="h-6 w-6 text-white" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">En Cours</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.underConstruction}
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 w-full">
@@ -135,6 +151,8 @@ export const Dashboard = ({ properties }: DashboardProps) => {
                         ? "bg-green-100 text-green-800"
                         : property.status === "À Louer"
                         ? "bg-blue-100 text-blue-800"
+                        : property.status === "En Cours"
+                        ? "bg-purple-100 text-purple-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
