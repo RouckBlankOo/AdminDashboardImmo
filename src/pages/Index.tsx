@@ -39,10 +39,13 @@ const Index = () => {
       // Process image paths and add id for compatibility
       const processedData = data.map((prop) => ({
         ...prop,
-        id: prop._id || "", // Ensure id is always defined
-        image: processImagePath(prop.image), // Ensure image is processed
+        id: prop._id,
+        image: prop.image,
         planImage: processImagePath(prop.planImage),
+        dateAdded: prop.dateAdded,
+        isRental: prop.isRental ?? false, // Ensure isRental is always defined
       }));
+      console.log("Fetched properties:", processedData);
 
       setProperties(processedData);
     } catch (err) {
@@ -57,11 +60,8 @@ const Index = () => {
   const processImagePath = (path?: string): string | undefined => {
     if (!path) return undefined;
 
-    // If it's already a full URL, return it as is
-    if (path.startsWith("http")) return path;
-
-    // Otherwise, prepend the API base URL
-    return `http://localhost:5000/${path.replace(/^\//, "")}`;
+    // For backward compatibility with old paths that don't start with /
+    return `http://localhost:5000/${path}`;
   };
 
   const handleLoginSuccess = () => {
@@ -76,7 +76,18 @@ const Index = () => {
   const handleCreateProperty = async (propertyData: FormData) => {
     try {
       const newProperty = await propertyService.createProperty(propertyData);
-      setProperties((prev) => [...prev, newProperty]);
+
+      // Process the new property's image paths
+      const processedProperty = {
+        ...newProperty,
+        id: newProperty._id || "",
+        image: processImagePath(newProperty.image),
+        planImage: processImagePath(newProperty.planImage),
+        dateAdded: newProperty.dateAdded || new Date().toISOString(),
+        isRental: newProperty.isRental ?? false, // Ensure isRental is always defined
+      };
+
+      setProperties((prev) => [...prev, processedProperty]);
       setShowPropertyForm(false);
       return true;
     } catch (error) {
@@ -91,8 +102,18 @@ const Index = () => {
         id,
         propertyData
       );
+
+      // Process the updated property's image paths
+      const processedProperty = {
+        ...updatedProperty,
+        id: updatedProperty._id || "",
+        image: processImagePath(updatedProperty.image),
+        planImage: processImagePath(updatedProperty.planImage),
+        dateAdded: updatedProperty.dateAdded || new Date().toISOString(),
+      };
+
       setProperties((prev) =>
-        prev.map((p) => (p._id === id ? updatedProperty : p))
+        prev.map((p) => (p._id === id ? processedProperty : p))
       );
       setShowPropertyForm(false);
       setEditingProperty(null);
@@ -203,10 +224,10 @@ const Index = () => {
               <Dashboard
                 properties={properties.map((prop) => ({
                   ...prop,
-                  id: prop._id || "", // Ensure id is always defined
-                  image: prop.image || "", // Provide a fallback for image
+                  id: prop._id,
+                  image: prop.image,
+                  isRental: prop.isRental ?? false,
                 }))}
-                isLoading={isLoading}
               />
             )}
 

@@ -1,24 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X } from "lucide-react";
-
-interface Property {
-  _id?: string;
-  title: string;
-  location: string;
-  price: string;
-  type: string;
-  status: string;
-  beds?: number;
-  baths?: number;
-  sqft: number;
-  description: string;
-  tags: string[];
-  featured: boolean;
-  isRental?: boolean;
-  image?: string;
-  planImage?: string;
-}
-
+import { Property } from "../api/propertyService"; // Import Property interface from api
 interface PropertyFormProps {
   setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
   properties: Property[];
@@ -29,7 +11,13 @@ interface PropertyFormProps {
   onCreateProperty: (data: FormData) => Promise<boolean>;
   onUpdateProperty: (id: string, data: FormData) => Promise<boolean>;
 }
-
+export const getPropertyById = async (id: string): Promise<Property> => {
+  const response = await fetch(`http://localhost:5000/properties/${id}`);
+  if (!response.ok) {
+    throw new Error("Failed to fetch property details");
+  }
+  return response.json();
+};
 export const PropertyForm: React.FC<PropertyFormProps> = ({
   properties,
   setProperties,
@@ -39,6 +27,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   setEditingProperty,
   onCreateProperty,
   onUpdateProperty,
+  getPropertyById,
 }) => {
   const [formData, setFormData] = useState<Property>({
     title: "",
@@ -213,6 +202,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
 
       const propertyFormData = new FormData();
 
+      // Add other form fields
       propertyFormData.append("title", formData.title.trim());
       propertyFormData.append("location", formData.location.trim());
       propertyFormData.append("price", formData.price);
@@ -234,12 +224,14 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
         propertyFormData.append("tags", tag);
       });
 
+      // Add image files
       imageFiles.forEach((file) => {
-        propertyFormData.append("images", file);
+        propertyFormData.append("images", file); // Field name matches backend
       });
 
+      // Add plan files
       planFiles.forEach((file) => {
-        propertyFormData.append("planImages", file);
+        propertyFormData.append("planImages", file); // Field name matches backend
       });
 
       let success = false;
@@ -491,7 +483,11 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                     <div className="relative">
                       <img
                         src={
-                          editingProperty.image.startsWith("http")
+                          Array.isArray(editingProperty.image)
+                            ? editingProperty.image[0].startsWith("http")
+                              ? editingProperty.image[0]
+                              : `http://localhost:5000/${editingProperty.image[0]}`
+                            : editingProperty.image.startsWith("http")
                             ? editingProperty.image
                             : `http://localhost:5000/${editingProperty.image}`
                         }

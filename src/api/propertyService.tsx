@@ -1,4 +1,3 @@
-// propertyService.tsx - Updated with better error handling and debugging
 import axios from "axios";
 import authService from "./authService";
 
@@ -6,7 +5,7 @@ const API_URL = "http://localhost:5000/api";
 
 export interface Property {
   _id?: string; // MongoDB ID
-  id: string; // Frontend ID derived from _id
+  id?: string; // Frontend ID derived from _id
   title: string;
   location: string;
   price: string;
@@ -14,17 +13,17 @@ export interface Property {
   status: string;
   beds?: number;
   baths?: number;
-  sqft: number;
-  image?: string; // Processed single image
-  planImage?: string; // Processed single plan image
-  images?: string[]; // Array from backend
-  planImages?: string[]; // Array from backend
-  dateAdded?: string; // Optional
+  sqft: number; // Backend field for main images (comma-separated paths)
+  planImages?: string; // Backend field for plan images (comma-separated paths)
+  image?: string; // Frontend processed single image URL
+  planImage?: string; // Frontend processed single plan image URL
+  dateAdded?: string;
   featured: boolean;
   description: string;
   tags: string[];
-  isRental?: boolean;
+  isRental?: boolean; // Make this required instead of optional
 }
+
 // Create a configured axios instance for API requests
 const apiClient = axios.create({
   baseURL: API_URL,
@@ -82,13 +81,37 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Helper function to process image paths from backend
+const processImagePath = (imagePaths?: string): string | undefined => {
+  if (!imagePaths) return undefined;
+
+  // Split comma-separated paths and get the first one
+  const paths = imagePaths.split(",").map((path) => path.trim());
+  const firstPath = paths[0];
+
+  if (!firstPath) return undefined;
+
+  console.log("Processing image path:", firstPath);
+  return `http://localhost:5000${firstPath}`;
+};
+
+const processProperty = (prop: Property): Property => {
+  return {
+    ...prop,
+    id: prop._id || "",
+    image: `http://localhost:5000${prop.image}`,
+    planImage: `http://localhost:5000${prop.planImage}`,
+    isRental: prop.isRental ?? false,
+  };
+};
+
 // Property service with API functions
 export const propertyService = {
   // Get all properties
   async getAllProperties(): Promise<Property[]> {
     try {
       const response = await apiClient.get("/properties");
-      return response.data;
+      return response.data.map(processProperty);
     } catch (error) {
       console.error("Error fetching properties:", error);
       throw new Error("Failed to fetch properties");
@@ -99,7 +122,7 @@ export const propertyService = {
   async getPropertyById(id: string): Promise<Property> {
     try {
       const response = await apiClient.get(`/properties/${id}`);
-      return response.data;
+      return processProperty(response.data);
     } catch (error) {
       console.error(`Error fetching property with ID ${id}:`, error);
       throw new Error("Failed to fetch property");
@@ -126,7 +149,7 @@ export const propertyService = {
       );
 
       console.log("Property created successfully:", response.data);
-      return response.data;
+      return processProperty(response.data);
     } catch (error) {
       console.error("Error creating property:", error);
 
@@ -162,7 +185,7 @@ export const propertyService = {
       });
 
       console.log("Property updated successfully:", response.data);
-      return response.data;
+      return processProperty(response.data);
     } catch (error) {
       console.error(`Error updating property with ID ${id}:`, error);
 
@@ -214,7 +237,7 @@ export const propertyService = {
             throw new Error("Authentication failed - please log in again");
           } else if (status === 404) {
             throw new Error(
-              "Property not found - it may have already been deleted"
+              "Property not found - it may have aalready been deleted"
             );
           } else if (status === 403) {
             throw new Error(

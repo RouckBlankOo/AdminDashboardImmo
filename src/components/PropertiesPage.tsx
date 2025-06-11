@@ -9,6 +9,7 @@ import {
   Bath,
   AreaChart,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { Property } from "../api/propertyService"; // Import Property interface from propertyService
 
 interface PropertiesPageProps {
@@ -16,7 +17,7 @@ interface PropertiesPageProps {
   setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
   setShowPropertyForm: (show: boolean) => void;
   setEditingProperty: (property: Property | null) => void;
-  onDeleteProperty: (id: string) => Promise<boolean>; // Add onDeleteProperty prop
+  onDeleteProperty: (id: string) => Promise<boolean>;
   isLoading: boolean;
 }
 
@@ -30,6 +31,7 @@ export const PropertiesPage = ({
 }: PropertiesPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const navigate = useNavigate(); // Initialize useNavigate
 
   const propertyTypes = [
     "Appartement",
@@ -53,6 +55,10 @@ export const PropertiesPage = ({
       console.log("Deleting property:", id);
       await onDeleteProperty(id);
     }
+  };
+
+  const handleCardClick = (id: string) => {
+    navigate(`/property/${id}`); // Navigate to the details page
   };
 
   const filteredProperties = properties.filter((property) => {
@@ -114,12 +120,21 @@ export const PropertiesPage = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProperties.map((property) => (
           <div
-            key={property.id} // Use string id derived from _id
-            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
+            key={property.id}
+            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer"
+            onClick={() => handleCardClick(property.id)} // Add onClick handler
           >
             <div className="relative h-48">
               <img
-                src={property.image}
+                src={
+                  Array.isArray(property.image)
+                    ? property.image[0].startsWith("http")
+                      ? property.image[0]
+                      : `http://localhost:5000/${property.image[0]}`
+                    : property.image.startsWith("http")
+                    ? property.image
+                    : `http://localhost:5000/${property.image}`
+                }
                 alt={property.title}
                 className="w-full h-full object-cover"
               />

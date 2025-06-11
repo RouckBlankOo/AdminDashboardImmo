@@ -1,24 +1,6 @@
 import React from "react";
 import { Building, DollarSign, Home, Eye, Hammer } from "lucide-react";
-
-interface Property {
-  id: string;
-  title: string;
-  location: string;
-  price: string;
-  type: string;
-  status: string;
-  beds?: number;
-  baths?: number;
-  sqft: number;
-  image: string;
-  dateAdded: string;
-  featured: boolean;
-  description: string;
-  tags: string[];
-  isRental: boolean;
-  planImage?: string; // Plan image for properties under construction
-}
+import { Property } from "../api/propertyService"; // Import Property interface from propertyService
 
 interface DashboardProps {
   properties: Property[];
@@ -130,7 +112,7 @@ export const Dashboard = ({ properties }: DashboardProps) => {
                   className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-md"
                 >
                   <img
-                    src={property.image}
+                    src={property.image || "/placeholder-image.jpg"} // Use placeholder if no image
                     alt={property.title}
                     className="w-full sm:w-16 h-32 sm:h-16 object-cover rounded-xl shadow-md"
                   />
