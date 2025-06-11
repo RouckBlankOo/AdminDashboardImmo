@@ -11,13 +11,7 @@ interface PropertyFormProps {
   onCreateProperty: (data: FormData) => Promise<boolean>;
   onUpdateProperty: (id: string, data: FormData) => Promise<boolean>;
 }
-export const getPropertyById = async (id: string): Promise<Property> => {
-  const response = await fetch(`http://localhost:5000/properties/${id}`);
-  if (!response.ok) {
-    throw new Error("Failed to fetch property details");
-  }
-  return response.json();
-};
+
 export const PropertyForm: React.FC<PropertyFormProps> = ({
   properties,
   setProperties,
@@ -27,7 +21,6 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
   setEditingProperty,
   onCreateProperty,
   onUpdateProperty,
-  getPropertyById,
 }) => {
   const [formData, setFormData] = useState<Property>({
     title: "",
@@ -486,10 +479,10 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                           Array.isArray(editingProperty.image)
                             ? editingProperty.image[0].startsWith("http")
                               ? editingProperty.image[0]
-                              : `http://localhost:5000/${editingProperty.image[0]}`
+                              : `https://api.sayalloimmo.com/${editingProperty.image[0]}`
                             : editingProperty.image.startsWith("http")
                             ? editingProperty.image
-                            : `http://localhost:5000/${editingProperty.image}`
+                            : `https://api.sayalloimmo.com/${editingProperty.image}`
                         }
                         alt="Existing Property"
                         className="h-20 w-20 object-cover rounded border"
@@ -532,11 +525,7 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
                   {editingProperty?.planImage && planFiles.length === 0 && (
                     <div className="relative">
                       <img
-                        src={
-                          editingProperty.planImage.startsWith("http")
-                            ? editingProperty.planImage
-                            : `http://localhost:5000/${editingProperty.planImage}`
-                        }
+                        src={`https://api.sayalloimmo.com/${editingProperty.planImage}`}
                         alt="Existing Plan"
                         className="h-20 w-20 object-cover rounded border"
                       />

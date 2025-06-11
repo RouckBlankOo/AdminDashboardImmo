@@ -56,7 +56,7 @@ const PropertyDetailsPage: React.FC = () => {
                     src={
                       img.startsWith("http")
                         ? img
-                        : `http://localhost:5000/${img}`
+                        : `https://api.sayalloimmo.com/${img}`
                     }
                     alt={`Image ${index + 1}`}
                     className="w-full h-40 object-cover rounded-lg"
@@ -67,7 +67,7 @@ const PropertyDetailsPage: React.FC = () => {
                     src={
                       property.image.startsWith("http")
                         ? property.image
-                        : `http://localhost:5000/${property.image}`
+                        : `https://api.sayalloimmo.com/${property.image}`
                     }
                     alt="Main Image"
                     className="w-full h-40 object-cover rounded-lg"

@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios';
 import { ApiError } from '@/types/errorsIntf';
 
 // Define base URL for API requests
-const API_BASE_URL ='http://localhost:5000/api';
+const API_BASE_URL ='https://api.sayalloimmo.com/api';
 
 // Create axios instance with default config
 const apiClient = axios.create({

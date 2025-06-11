@@ -18,12 +18,10 @@ const Index = () => {
   const [showPropertyForm, setShowPropertyForm] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
 
-  // Check authentication status on component mount
   useEffect(() => {
     setIsAuthenticated(authService.isAuthenticated());
   }, []);
 
-  // Fetch properties from API when authenticated
   useEffect(() => {
     if (isAuthenticated) {
       fetchProperties();
@@ -36,32 +34,15 @@ const Index = () => {
     try {
       const data = await propertyService.getAllProperties();
 
-      // Process image paths and add id for compatibility
-      const processedData = data.map((prop) => ({
-        ...prop,
-        id: prop._id,
-        image: prop.image,
-        planImage: processImagePath(prop.planImage),
-        dateAdded: prop.dateAdded,
-        isRental: prop.isRental ?? false, // Ensure isRental is always defined
-      }));
-      console.log("Fetched properties:", processedData);
-
-      setProperties(processedData);
+      // The propertyService already processes the images, so we don't need to do it again
+      console.log("Fetched properties:", data);
+      setProperties(data);
     } catch (err) {
       console.error("Failed to fetch properties:", err);
       setError("Failed to load properties. Please try again later.");
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Helper function to process image paths
-  const processImagePath = (path?: string): string | undefined => {
-    if (!path) return undefined;
-
-    // For backward compatibility with old paths that don't start with /
-    return `http://localhost:5000/${path}`;
   };
 
   const handleLoginSuccess = () => {
@@ -77,17 +58,8 @@ const Index = () => {
     try {
       const newProperty = await propertyService.createProperty(propertyData);
 
-      // Process the new property's image paths
-      const processedProperty = {
-        ...newProperty,
-        id: newProperty._id || "",
-        image: processImagePath(newProperty.image),
-        planImage: processImagePath(newProperty.planImage),
-        dateAdded: newProperty.dateAdded || new Date().toISOString(),
-        isRental: newProperty.isRental ?? false, // Ensure isRental is always defined
-      };
-
-      setProperties((prev) => [...prev, processedProperty]);
+      // The propertyService already processes the property, including images
+      setProperties((prev) => [...prev, newProperty]);
       setShowPropertyForm(false);
       return true;
     } catch (error) {
@@ -103,17 +75,9 @@ const Index = () => {
         propertyData
       );
 
-      // Process the updated property's image paths
-      const processedProperty = {
-        ...updatedProperty,
-        id: updatedProperty._id || "",
-        image: processImagePath(updatedProperty.image),
-        planImage: processImagePath(updatedProperty.planImage),
-        dateAdded: updatedProperty.dateAdded || new Date().toISOString(),
-      };
-
+      // The propertyService already processes the property, including images
       setProperties((prev) =>
-        prev.map((p) => (p._id === id ? processedProperty : p))
+        prev.map((p) => (p._id === id ? updatedProperty : p))
       );
       setShowPropertyForm(false);
       setEditingProperty(null);
@@ -134,14 +98,11 @@ const Index = () => {
 
       setProperties((prev) => prev.filter((p) => p._id !== id));
 
-      // Show success message or notification
       console.log(`Property with ID ${id} deleted successfully`);
       return true;
     } catch (error) {
-      // Log detailed error information
       console.error(`Error deleting property with ID ${id}:`, error);
 
-      // Display error message to user
       setError(
         `Failed to delete property. ${
           error instanceof Error ? error.message : "Please try again later."
@@ -164,12 +125,10 @@ const Index = () => {
     }
   };
 
-  // If not authenticated, show login page
   if (!isAuthenticated) {
     return <LoginPage onLoginSuccess={handleLoginSuccess} />;
   }
 
-  // If authenticated, show dashboard
   return (
     <div className="h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex overflow-hidden">
       <Sidebar
@@ -225,7 +184,7 @@ const Index = () => {
                 properties={properties.map((prop) => ({
                   ...prop,
                   id: prop._id,
-                  image: prop.image,
+                  image: Array.isArray(prop.image) ? prop.image[0] : prop.image,
                   isRental: prop.isRental ?? false,
                 }))}
               />

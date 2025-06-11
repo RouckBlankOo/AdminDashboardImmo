@@ -8,8 +8,9 @@ import {
   Bed,
   Bath,
   AreaChart,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { Property } from "../api/propertyService"; // Import Property interface from propertyService
 
 interface PropertiesPageProps {
@@ -17,9 +18,96 @@ interface PropertiesPageProps {
   setProperties: React.Dispatch<React.SetStateAction<Property[]>>;
   setShowPropertyForm: (show: boolean) => void;
   setEditingProperty: (property: Property | null) => void;
-  onDeleteProperty: (id: string) => Promise<boolean>;
+  onDeleteProperty: (id: string) => Promise<boolean>; // Add onDeleteProperty prop
   isLoading: boolean;
 }
+
+// Image Carousel Component
+const ImageCarousel = ({
+  images,
+  title,
+}: {
+  images: string[];
+  title: string;
+}) => {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const nextImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev + 1) % images.length);
+  };
+
+  const prevImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length);
+  };
+
+  if (!images || images.length === 0) {
+    return (
+      <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+        <span className="text-gray-400">Aucune image</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-full group">
+      <img
+        src={images[currentImageIndex]}
+        alt={`${title} - Image ${currentImageIndex + 1}`}
+        className="w-full h-full object-cover"
+      />
+
+      {/* Navigation Buttons - Only show if more than 1 image */}
+      {images.length > 1 && (
+        <>
+          <button
+            onClick={prevImage}
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-opacity-70"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={nextImage}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-opacity-70"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </>
+      )}
+
+      {/* Image Indicators - Only show if more than 1 image */}
+      {images.length > 1 && (
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+          {images.map((_, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setCurrentImageIndex(index);
+              }}
+              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                index === currentImageIndex
+                  ? "bg-white"
+                  : "bg-white bg-opacity-50 hover:bg-opacity-75"
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Image Counter */}
+      {images.length > 1 && (
+        <div className="absolute top-2 right-2 bg-black bg-opacity-50 text-white px-2 py-1 rounded text-xs">
+          {currentImageIndex + 1}/{images.length}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const PropertiesPage = ({
   properties,
@@ -31,7 +119,6 @@ export const PropertiesPage = ({
 }: PropertiesPageProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
-  const navigate = useNavigate(); // Initialize useNavigate
 
   const propertyTypes = [
     "Appartement",
@@ -55,10 +142,6 @@ export const PropertiesPage = ({
       console.log("Deleting property:", id);
       await onDeleteProperty(id);
     }
-  };
-
-  const handleCardClick = (id: string) => {
-    navigate(`/property/${id}`); // Navigate to the details page
   };
 
   const filteredProperties = properties.filter((property) => {
@@ -120,31 +203,25 @@ export const PropertiesPage = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredProperties.map((property) => (
           <div
-            key={property.id}
-            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100 cursor-pointer"
-            onClick={() => handleCardClick(property.id)} // Add onClick handler
+            key={property.id} // Use string id derived from _id
+            className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-gray-100"
           >
             <div className="relative h-48">
-              <img
-                src={
+              <ImageCarousel
+                images={
                   Array.isArray(property.image)
-                    ? property.image[0].startsWith("http")
-                      ? property.image[0]
-                      : `http://localhost:5000/${property.image[0]}`
-                    : property.image.startsWith("http")
                     ? property.image
-                    : `http://localhost:5000/${property.image}`
+                    : [property.image]
                 }
-                alt={property.title}
-                className="w-full h-full object-cover"
+                title={property.title}
               />
               {property.featured && (
-                <span className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 text-xs font-medium rounded-full shadow-lg">
+                <span className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 text-xs font-medium rounded-full shadow-lg z-10">
                   En Vedette
                 </span>
               )}
               <span
-                className={`absolute top-3 right-3 px-3 py-1 text-xs font-medium rounded-full shadow-lg ${
+                className={`absolute top-3 left-1/2 transform -translate-x-1/2 px-3 py-1 text-xs font-medium rounded-full shadow-lg z-10 ${
                   property.status === "À Vendre"
                     ? "bg-green-500 text-white"
                     : property.status === "À Louer"

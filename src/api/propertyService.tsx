@@ -1,7 +1,8 @@
 import axios from "axios";
 import authService from "./authService";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = "https://api.sayalloimmo.com/api";
+const BASE_URL = "https://api.sayalloimmo.com";
 
 export interface Property {
   _id?: string; // MongoDB ID
@@ -13,21 +14,21 @@ export interface Property {
   status: string;
   beds?: number;
   baths?: number;
-  sqft: number; // Backend field for main images (comma-separated paths)
+  sqft: number;
   planImages?: string; // Backend field for plan images (comma-separated paths)
-  image?: string; // Frontend processed single image URL
-  planImage?: string; // Frontend processed single plan image URL
+  image?: string | string[]; // Frontend processed image URLs (array or single)
+  planImage?: string | string[]; // Frontend processed plan image URLs (array or single)
   dateAdded?: string;
   featured: boolean;
   description: string;
   tags: string[];
-  isRental?: boolean; // Make this required instead of optional
+  isRental?: boolean;
 }
 
 // Create a configured axios instance for API requests
 const apiClient = axios.create({
   baseURL: API_URL,
-  timeout: 30000, // 30 seconds timeout
+  timeout: 30000,
 });
 
 // Add auth token to requests
@@ -73,7 +74,6 @@ apiClient.interceptors.response.use(
 
     if (error.response && error.response.status === 401) {
       console.warn("Authentication failed - redirecting to login");
-      // Token expired or invalid
       authService.logout();
       window.location.href = "/";
     }
@@ -81,26 +81,38 @@ apiClient.interceptors.response.use(
   }
 );
 
-// Helper function to process image paths from backend
-const processImagePath = (imagePaths?: string): string | undefined => {
-  if (!imagePaths) return undefined;
+// Helper function to process image URLs
+const processImageUrl = (imageUrl: string): string => {
+  if (!imageUrl) return "";
 
-  // Split comma-separated paths and get the first one
-  const paths = imagePaths.split(",").map((path) => path.trim());
-  const firstPath = paths[0];
+  // If the URL already starts with http, return as is
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
 
-  if (!firstPath) return undefined;
+  // Add base URL to relative paths
+  return `${BASE_URL}${imageUrl}`;
+};
 
-  console.log("Processing image path:", firstPath);
-  return `http://localhost:5000${firstPath}`;
+// Helper function to process image arrays or single images
+const processImages = (
+  images: string | string[] | undefined
+): string | string[] | undefined => {
+  if (!images) return undefined;
+
+  if (Array.isArray(images)) {
+    return images.map(processImageUrl);
+  }
+
+  return processImageUrl(images);
 };
 
 const processProperty = (prop: Property): Property => {
   return {
     ...prop,
     id: prop._id || "",
-    image: `http://localhost:5000${prop.image}`,
-    planImage: `http://localhost:5000${prop.planImage}`,
+    image: processImages(prop.image),
+    planImage: processImages(prop.planImage),
     isRental: prop.isRental ?? false,
   };
 };
@@ -111,7 +123,10 @@ export const propertyService = {
   async getAllProperties(): Promise<Property[]> {
     try {
       const response = await apiClient.get("/properties");
-      return response.data.map(processProperty);
+      console.log("Raw properties from API:", response.data);
+      const processedProperties = response.data.map(processProperty);
+      console.log("Processed properties:", processedProperties);
+      return processedProperties;
     } catch (error) {
       console.error("Error fetching properties:", error);
       throw new Error("Failed to fetch properties");
@@ -132,7 +147,6 @@ export const propertyService = {
   // Create a new property (handles file uploads)
   async createProperty(propertyData: FormData): Promise<Property> {
     try {
-      // Log FormData contents for debugging
       console.log("Creating property with data:");
       for (const [key, value] of propertyData.entries()) {
         console.log(key, value);
@@ -155,12 +169,10 @@ export const propertyService = {
 
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // Server responded with error status
           const message =
             error.response.data?.message || "Failed to create property";
           throw new Error(message);
         } else if (error.request) {
-          // Request was made but no response received
           throw new Error("Network error - please check your connection");
         }
       }
@@ -172,7 +184,6 @@ export const propertyService = {
   // Update an existing property
   async updateProperty(id: string, propertyData: FormData): Promise<Property> {
     try {
-      // Log FormData contents for debugging
       console.log(`Updating property ${id} with data:`);
       for (const [key, value] of propertyData.entries()) {
         console.log(key, value);
@@ -206,59 +217,22 @@ export const propertyService = {
   // Delete a property with improved error handling
   async deleteProperty(id: string): Promise<void> {
     try {
-      // Check if we have a valid token before making the request
-      const token = authService.getToken();
-      if (!token) {
-        throw new Error("Authentication required - please log in again");
-      }
-
-      console.log(`Sending DELETE request to: ${API_URL}/properties/${id}`);
-      console.log(`Using token: ${token.substring(0, 20)}...`);
-
-      // Make the delete request
       const response = await apiClient.delete(`/properties/${id}`);
-
-      console.log("Delete property response:", response.data);
       console.log(`Successfully deleted property with ID: ${id}`);
     } catch (error) {
-      console.error(
-        `Error in propertyService.deleteProperty for ID ${id}:`,
-        error
-      );
+      console.error(`Error deleting property with ID ${id}:`, error);
 
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // Server responded with an error
-          const status = error.response.status;
           const message =
             error.response.data?.message || "Failed to delete property";
-
-          if (status === 401) {
-            throw new Error("Authentication failed - please log in again");
-          } else if (status === 404) {
-            throw new Error(
-              "Property not found - it may have aalready been deleted"
-            );
-          } else if (status === 403) {
-            throw new Error(
-              "Permission denied - you don't have access to delete this property"
-            );
-          } else {
-            throw new Error(`Server error (${status}): ${message}`);
-          }
+          throw new Error(message);
         } else if (error.request) {
-          // Request was made but no response received
-          throw new Error(
-            "Network error - please check your connection and try again"
-          );
-        } else {
-          // Something happened in setting up the request
-          throw new Error(`Request setup error: ${error.message}`);
+          throw new Error("Network error - please check your connection");
         }
       }
 
-      // Re-throw the error so it can be handled by the component
-      throw error;
+      throw new Error("Failed to delete property");
     }
   },
 };
