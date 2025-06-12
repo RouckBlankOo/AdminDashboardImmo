@@ -12,7 +12,9 @@ export const Dashboard = ({ properties }: DashboardProps) => {
     forSale: properties.filter((p) => p.status === "À Vendre").length,
     forRent: properties.filter((p) => p.status === "À Louer").length,
     featured: properties.filter((p) => p.featured).length,
-    underConstruction: properties.filter((p) => p.status === "En Cours").length, // New stat for properties under construction
+    underConstruction: properties.filter(
+      (p) => p.status === "Projet en cours de construction"
+    ).length, // New stat for properties under construction
   };
 
   console.log("Dashboard stats:", stats);
@@ -89,7 +91,9 @@ export const Dashboard = ({ properties }: DashboardProps) => {
                 <Hammer className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">En Cours</p>
+                <p className="text-sm font-medium text-gray-600 truncate">
+                  En cours de Construction
+                </p>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.underConstruction}
                 </p>
@@ -112,7 +116,11 @@ export const Dashboard = ({ properties }: DashboardProps) => {
                   className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-all duration-200 hover:shadow-md"
                 >
                   <img
-                    src={property.image || "/placeholder-image.jpg"} // Use placeholder if no image
+                    src={
+                      Array.isArray(property.image)
+                        ? property.image[0]
+                        : property.image || "/placeholder-image.jpg"
+                    } // Use first image if array or placeholder if no image
                     alt={property.title}
                     className="w-full sm:w-16 h-32 sm:h-16 object-cover rounded-xl shadow-md"
                   />
@@ -133,7 +141,7 @@ export const Dashboard = ({ properties }: DashboardProps) => {
                         ? "bg-green-100 text-green-800"
                         : property.status === "À Louer"
                         ? "bg-blue-100 text-blue-800"
-                        : property.status === "En Cours"
+                        : property.status === "Projet en cours de construction"
                         ? "bg-purple-100 text-purple-800"
                         : "bg-gray-100 text-gray-800"
                     }`}

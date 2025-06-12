@@ -52,7 +52,13 @@ export const PropertyForm: React.FC<PropertyFormProps> = ({
     "Bureau",
   ];
 
-  const statusOptions = ["À Vendre", "À Louer", "Vendu", "Loué", "En Cours"];
+  const statusOptions = [
+    "À Vendre",
+    "À Louer",
+    "Vendu",
+    "Loué",
+    "Projet en cours de construction",
+  ];
 
   useEffect(() => {
     if (editingProperty) {
