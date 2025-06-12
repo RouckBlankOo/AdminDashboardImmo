@@ -130,7 +130,8 @@ const Index = () => {
   }
 
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex overflow-hidden">
+    <div className="h-screen w-full bg-gradient-to-br from-gray-50 to-gray-100 flex">
+      {/* Sidebar */}
       <Sidebar
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
@@ -139,7 +140,12 @@ const Index = () => {
         onLogout={handleLogout}
       />
 
-      <div className="flex-1 flex flex-col w-full min-w-0">
+      {/* Main Content */}
+      <div
+        className={`flex-1 flex flex-col w-full min-w-0 ${
+          sidebarOpen ? "lg:ml-64" : ""
+        } transition-all duration-300`}
+      >
         <header className="bg-white shadow-lg border-b border-gray-200 sticky top-0 z-40 flex-shrink-0 w-full">
           <div className="w-full px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between h-16 w-full">
